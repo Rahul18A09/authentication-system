@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const swaggerUI = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 const healthRoutes = require("./routes/health.routes");
+const authRoutes = require("./routes/auth.routes");
 
 const app = express();
 
@@ -30,5 +31,8 @@ app.get("/", (req, res) => {
         message: "Authentication API is running"
     });
 });
+
+
+app.use("/api/auth", authRoutes);
 
 module.exports = app;
