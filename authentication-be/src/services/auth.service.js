@@ -1,6 +1,11 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-const generateToken = require("../utils/generateToken");
+const RefreshToken = require("../models/RefreshToken");
+
+const {
+  generateAccessToken,
+  generateRefreshToken,
+} = require("../utils/token.util");
 
 const registerUser = async (userData) => {
     const { firstName, lastName, email, password } = userData;
@@ -45,15 +50,29 @@ const loginUser = async ({ email, password }) => {
         throw new Error("Invalid email or password");
     }
 
-    const token = generateToken({
-        id: user._id,
-        role: user.role,
+    const payload = {
+    id: user._id,
+    role: user.role,
+};
+
+const accessToken = generateAccessToken(payload);
+
+const refreshToken = generateRefreshToken(payload);
+
+ await RefreshToken.create({
+        token: refreshToken,
+        user: user._id,
+        expiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+        ),
     });
+
 
     user.password = undefined;
 
     return {
-        token,
+        accessToken,
+        refreshToken,
         user,
     };
 };
