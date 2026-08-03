@@ -39,6 +39,17 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    profileImage: {
+    type: String,
+    default: ""
+},
+
+cloudinaryId: {
+    type: String,
+    default: ""
+},
+
   },
   {
     timestamps: true,
