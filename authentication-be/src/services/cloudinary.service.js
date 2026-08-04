@@ -27,6 +27,13 @@ const uploadImage = (buffer, folder = "authentication-system") => {
 
 };
 
+const deleteImage = async (publicId) => {
+
+    return await cloudinary.uploader.destroy(publicId);
+
+};
+
 module.exports = {
-    uploadImage
+    uploadImage,
+    deleteImage
 };
