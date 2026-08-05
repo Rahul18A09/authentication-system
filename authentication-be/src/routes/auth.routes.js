@@ -8,6 +8,9 @@ const authenticate = require("../middlewares/auth.middleware");
 const {
   registerValidation,
   loginValidation,
+  resendVerificationValidation,
+  forgotPasswordValidation,
+  resetPasswordValidation,
 } = require("../validators/auth.validator");
 
 /**
@@ -78,6 +81,132 @@ router.post(
   loginValidation,
   validate,
   authController.login
+);
+
+/**
+ * @swagger
+ * /api/auth/verify-email/{token}:
+ *   get:
+ *     summary: Verify user's email
+ *     tags:
+ *       - Authentication
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Email verification token
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *       400:
+ *         description: Invalid or expired verification token
+ */
+router.get(
+    "/verify-email/:token",
+    authController.verifyEmail
+);
+
+/**
+ * @swagger
+ * /api/auth/resend-verification:
+ *   post:
+ *     summary: Resend email verification link
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: rahul@example.com
+ *     responses:
+ *       200:
+ *         description: Verification email sent successfully
+ *       400:
+ *         description: Invalid request
+ *       404:
+ *         description: User not found
+ */
+router.post(
+    "/resend-verification",
+    resendVerificationValidation,
+    validate,
+    authController.resendVerificationEmail
+);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Send password reset email
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: rahul@example.com
+ *     responses:
+ *       200:
+ *         description: Password reset email sent successfully
+ */
+router.post(
+    "/forgot-password",
+    forgotPasswordValidation,
+    validate,
+    authController.forgotPassword
+);
+
+/**
+ * @swagger
+ * /api/auth/reset-password/{token}:
+ *   post:
+ *     summary: Reset user's password
+ *     tags:
+ *       - Authentication
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Password reset token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - password
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 example: NewPassword@123
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ */
+router.post(
+    "/reset-password/:token",
+    resetPasswordValidation,
+    validate,
+    authController.resetPassword
 );
 
 /**

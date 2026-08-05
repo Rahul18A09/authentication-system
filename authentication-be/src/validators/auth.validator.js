@@ -28,7 +28,34 @@ const loginValidation = [
     .withMessage("Password is required"),
 ];
 
+const forgotPasswordValidation = [
+    body("email")
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Please enter a valid email"),
+];
+
+const resetPasswordValidation = [
+    body("password")
+        .notEmpty()
+        .withMessage("Password is required")
+        .isLength({ min: 8 })
+        .withMessage("Password must be at least 8 characters"),
+];
+
+const resendVerificationValidation = [
+    body("email")
+        .notEmpty()
+        .withMessage("Email is required")
+        .isEmail()
+        .withMessage("Please enter a valid email"),
+];
+
 module.exports = {
   registerValidation,
   loginValidation,
+  resendVerificationValidation,
+  forgotPasswordValidation,
+  resetPasswordValidation,
 };
