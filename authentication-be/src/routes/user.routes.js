@@ -10,7 +10,8 @@ const {
     uploadProfileImage,
     getProfile,
     updateProfile,
-    changePassword
+    changePassword,
+    deleteProfile
 } = require("../controllers/user.controller");
 
 const {
@@ -150,6 +151,28 @@ router.post(
     authMiddleware,
     upload.single("profileImage"),
     uploadProfileImage
+);
+
+/**
+ * @swagger
+ * /api/users/profile:
+ *   delete:
+ *     summary: Delete logged-in user's account
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile deleted successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       404:
+ *         description: User not found.
+ */
+router.delete(
+    "/profile",
+    authMiddleware,
+    deleteProfile
 );
 
 module.exports = router;

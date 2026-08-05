@@ -5,157 +5,126 @@ const {
 } = require("../services/cloudinary.service");
 const userService = require("../services/user.service");
 const { validationResult } = require("express-validator");
+const ApiResponse = require("../utils/ApiResponse");
+const ApiError = require("../utils/ApiError");
+const catchAsync = require("../utils/catchAsync");
 
 
-const uploadProfileImage = async (req, res) => {
+const uploadProfileImage = catchAsync(async (req, res) => {
 
-    try {
+    if (!req.file) {
 
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: "Please upload an image."
-            });
-        }
-
-        // Find logged-in user
-        const user = await User.findById(req.user.id);
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found."
-            });
-        }
-
-        // Delete previous image if it exists
-        if (user.cloudinaryId) {
-            await deleteImage(user.cloudinaryId);
-        }
-
-        // Upload new image
-        const result = await uploadImage(req.file.buffer);
-
-        // Save new image details
-        user.profileImage = result.secure_url;
-        user.cloudinaryId = result.public_id;
-
-        await user.save();
-
-        // Don't return password
-        user.password = undefined;
-
-        res.status(200).json({
-            success: true,
-            message: "Profile image uploaded successfully.",
-            data: user
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-
-    }
-
-};
-
-const getProfile = async (req, res) => {
-
-    try {
-
-        const user = await userService.getProfile(req.user.id);
-
-        res.status(200).json({
-            success: true,
-            data: user
-        });
-
-    } catch (error) {
-
-        res.status(404).json({
-            success: false,
-            message: error.message
-        });
-
-    }
-
-};
-
-const updateProfile = async (req, res) => {
-
-    try {
-
-        const errors = validationResult(req);
-
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                errors: errors.array()
-            });
-        }
-
-        const user = await userService.updateProfile(
-            req.user.id,
-            req.body
+        throw new ApiError(
+            400,
+            "Please upload an image."
         );
 
-        res.status(200).json({
-            success: true,
-            message: "Profile updated successfully.",
-            data: user
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-
     }
 
-};  
+    const result = await uploadImage(req.file.buffer);
 
-const changePassword = async (req, res) => {
-
-    try {
-
-        const errors = validationResult(req);
-
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                errors: errors.array()
-            });
+    const user = await User.findByIdAndUpdate(
+        req.user.id,
+        {
+            profileImage: result.secure_url,
+            cloudinaryId: result.public_id
+        },
+        {
+            new: true
         }
+    ).select("-password");
 
-        await userService.changePassword(
-            req.user.id,
-            req.body
+    return new ApiResponse(
+        res,
+        200,
+        "Profile image uploaded successfully.",
+        user
+    );
+
+});
+
+const getProfile = catchAsync(async (req, res) => {
+
+    const user = await userService.getProfile(req.user.id);
+
+    return new ApiResponse(
+        res,
+        200,
+        "Profile fetched successfully.",
+        user
+    );
+
+});
+
+const updateProfile = catchAsync(async (req, res) => {
+
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+
+        throw new ApiError(
+            400,
+            errors.array()[0].msg
         );
 
-        res.status(200).json({
-            success: true,
-            message: "Password changed successfully."
-        });
+    }
 
-    } catch (error) {
+    const user = await userService.updateProfile(
+        req.user.id,
+        req.body
+    );
 
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+    return new ApiResponse(
+        res,
+        200,
+        "Profile updated successfully.",
+        user
+    );
+
+});
+
+const changePassword = catchAsync(async (req, res) => {
+
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+
+        throw new ApiError(
+            400,
+            errors.array()[0].msg
+        );
 
     }
 
-};
+    await userService.changePassword(
+        req.user.id,
+        req.body
+    );
+
+    return new ApiResponse(
+        res,
+        200,
+        "Password changed successfully."
+    );
+
+});
+
+const deleteProfile = catchAsync(async (req, res) => {
+
+    await userService.deleteProfile(req.user.id);
+
+    return new ApiResponse(
+        res,
+        200,
+        "Profile deleted successfully."
+    );
+
+});
 
 module.exports = {
     uploadProfileImage,
     getProfile,
     updateProfile,
-    changePassword
+    changePassword,
+    deleteProfile
 };
